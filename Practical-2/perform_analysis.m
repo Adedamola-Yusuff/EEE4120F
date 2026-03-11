@@ -1,0 +1,292 @@
+% =========================================================================
+% Practical 2: Mandelbrot-Set Serial vs Parallel Analysis
+% =========================================================================
+%
+% GROUP NUMBER:
+%
+% MEMBERS:
+%   - Member 1 Name, Student Number
+%   - Member 2 Name, Student Number
+
+%% ========================================================================
+%  PART 1: Mandelbrot Set Image Plotting and Saving
+%  ========================================================================
+%  Inputs:
+%       mandelbrot_matrix   :  2D matrix of iteration counts
+%       filename            :  name of file to save image to
+% DONE: Implement Mandelbrot set plotting and saving function
+function mandelbrot_plot(mandelbrot_matrix, filename)
+    % Create a new figure
+    figure;
+    
+    % Plot the matrix as an image
+    imagesc(mandelbrot_matrix)
+
+    % Ensures that the pixels aren't stretched
+    axis equal;
+
+    % Fills the axes box tightly around the data by setting the axis lmits
+    % equal to the range of the data
+    axis tight;
+    
+    % We don't really want to see the axes. Also, it would just look nice
+    % in the report
+    axis off;
+
+    % Controls the coloring of iteration values. Could also use
+    % colormap(jet) or colormap(parula)
+    colormap(hot);
+    colorbar;
+
+    % Add title
+    title('Mandelbrot Set');
+
+    % Save the figure to file
+    saveas(gcf, filename);
+end
+
+%% ========================================================================
+%  PART 2: Serial Mandelbrot Set Computation
+%  ========================================================================`
+%  Inputs:
+%       width          => Contributes to the resolution of the image. This
+%       is essentially how many pixels the image is broken up into
+%       horizontally
+%
+%       height         => Also contributes to the resolution of the image
+%       and is ho many pixels the image is broken up into vertically
+%
+%       max_iterations => This number is the point at which we're saying "if
+%       the magnitude doesn't surpass 2 once we've reached this many
+%       iterations, it never will". Obviously, this is an estimation.
+% DONE: Implement serial Mandelbrot set computation function
+function [mandel] = mandelbrot_serial(width, height, max_iterations)
+    % Coordinate limits
+    xmin = -2.0;
+    xmax = 0.5;
+    ymin = -1.2;
+    ymax = 1.2;
+
+    % Preallocate matrix (important for performance)
+    mandel = zeros(height, width);
+
+    % Loop over pixels
+    for ix = 1:width
+        for iy = 1:height
+
+            % Mapping each pixel to the complex plane area represented by
+            % xmin, xmax, ymin and ymax
+            x0 = xmin + (ix-1)*(xmax-xmin)/(width-1);
+            y0 = ymin + (iy-1)*(ymax-ymin)/(height-1);
+
+            % Initial conditions are 0 since the equation is initially
+            % f_c(z) = z^2 + c, where c is the complex value represented by
+            % the pixel we're currently on at this stage in the code. z
+            % is initially 0, then becomes c, then becomes c^2 + c etc. as
+            % we iteratively evaluate f until x^2 + y^2 >= 4 or
+            % iteration >= max_iterations
+            x = 0;
+            y = 0;
+            iteration = 0;
+
+            % Mandelbrot iteration
+            while (iteration < max_iterations) && (x^2 + y^2 <= 4)
+                x_next = x^2 - y^2 + x0;
+                y_next = 2*x*y + y0;
+
+                x = x_next;
+                y = y_next;
+
+                iteration = iteration + 1;
+            end
+
+            % Store iteration count
+            mandel(iy, ix) = iteration;
+        end
+    end
+end
+
+%% ========================================================================
+%  PART 3: Parallel Mandelbrot Set Computation
+%  ========================================================================
+%
+%TODO: Implement parallel Mandelbrot set computation function
+function [mandel] = mandelbrot_parallel(width, height, max_iterations)
+
+    % Coordinate limits
+    xmin = -2.0;
+    xmax = 0.5;
+    ymin = -1.2;
+    ymax = 1.2;
+
+    % Preallocate matrix
+    mandel = zeros(height, width);
+
+    % Parallel outer loop
+    parfor ix = 1:width
+        for iy = 1:height
+
+            % Map pixel to complex plane
+            x0 = xmin + (ix-1)*(xmax-xmin)/(width-1);
+            y0 = ymin + (iy-1)*(ymax-ymin)/(height-1);
+
+            % Initial conditions
+            x = 0;
+            y = 0;
+            iteration = 0;
+
+            % Mandelbrot iteration
+            while (iteration < max_iterations) && (x^2 + y^2 <= 4)
+                x_next = x^2 - y^2 + x0;
+                y_next = 2*x*y + y0;
+
+                x = x_next;
+                y = y_next;
+
+                iteration = iteration + 1;
+            end
+
+            mandel(iy, ix) = iteration;
+        end
+    end
+end
+
+
+%% ========================================================================
+%  PART 4: Testing and Analysis
+%  ========================================================================
+% Compare the performance of serial Mandelbrot set computation
+% with parallel Mandelbrot set computation.
+
+function run_analysis()
+    % Array conatining all the image sizes to be tested
+    image_sizes = [
+        [800,600],   %SVGA
+        [1280,720],  %HD
+        [1920,1080], %Full HD
+        [2048,1080], %2K Cinema
+        [2560,1440], %2K QHD
+        [3840,2160], %4K UHD
+        [5120,2880], %5K
+        [7680,4320]  %8K UHD
+    ]
+
+    max_iterations  = 1000;
+    
+    names = ["SVGA","HD","FullHD","2K","QHD","4K UHD","5K","8K UHD"];
+    results = struct();
+    
+    %TODO: For each image size, perform the following:
+    %   a. Measure execution time of mandelbrot_serial
+    %   b. Measure execution time of mandelbrot_parallel
+    %   c. Store results (image size, time_serial, time_parallel, speedup)  
+    %   d. Plot and save the Mandelbrot set images generated by both methods
+
+    %% =====Calculation of mandelbrot serial execution time on each image size and storage of matrix result=====%
+    for i = 1:length(names)
+        width = image_sizes(i,1);
+        height = image_sizes(i,2);
+    
+        tic
+        mandel = mandelbrot_serial(width,height,max_iterations);
+        serial_time = toc;
+    
+        results(i).name = names(i);
+        results(i).width = width;
+        results(i).height = height;
+        results(i).serial_time = serial_time;
+        results(i).serial_image = mandel;
+    end
+ 
+    %% =====Calculation of mandelbrot 2-core parallel execution time on each image size and storage of matrix result=====%
+    delete(gcp('nocreate'))
+    parpool(2)
+    for i = 1:length(names) 
+        width = image_sizes(i,1);
+        height = image_sizes(i,2);
+    
+        tic
+        mandel = mandelbrot_parallel(width,height,max_iterations);
+        parallel_time = toc;
+    
+        results(i).parallel_time2 = parallel_time;
+        results(i).parallel_image2 = mandel;
+    end
+    
+
+    % using feature('numcores'), it was found that the number of cores for this machine was 6
+    %% =====Calculation of mandelbrot 3-core parallel execution time on each image size and storage of matrix result=====%
+    delete(gcp('nocreate'))
+    parpool(3)
+    for i = 1:length(names) 
+        width = image_sizes(i,1);
+        height = image_sizes(i,2);
+    
+        tic
+        mandel = mandelbrot_parallel(width,height,max_iterations);
+        parallel_time = toc;
+    
+        results(i).parallel_time3 = parallel_time;
+        results(i).parallel_image3 = mandel;
+    end
+
+    %% =====Calculation of mandelbrot 4-core parallel execution time on each image size and storage of matrix result=====%
+    delete(gcp('nocreate'))
+    parpool(4)
+    for i = 1:length(names) 
+        width = image_sizes(i,1);
+        height = image_sizes(i,2);
+    
+        tic
+        mandel = mandelbrot_parallel(width,height,max_iterations);
+        parallel_time = toc;
+    
+        results(i).parallel_time4 = parallel_time;
+        results(i).parallel_image4 = mandel;
+    end
+
+    %% =====Calculation of mandelbrot 5-core parallel execution time on each image size and storage of matrix result=====%
+    delete(gcp('nocreate'))
+    parpool(5)
+    for i = 1:length(names) 
+        width = image_sizes(i,1);
+        height = image_sizes(i,2);
+    
+        tic
+        mandel = mandelbrot_parallel(width,height,max_iterations);
+        parallel_time = toc;
+    
+        results(i).parallel_time5 = parallel_time;
+        results(i).parallel_image5 = mandel;
+    end
+
+    %% =====Calculation of mandelbrot 6-core parallel execution time on each image size and storage of matrix result=====%
+    delete(gcp('nocreate'))
+    parpool(3)
+    for i = 1:length(names) 
+        width = image_sizes(i,1);
+        height = image_sizes(i,2);
+    
+        tic
+        mandel = mandelbrot_parallel(width,height,max_iterations);
+        parallel_time = toc;
+    
+        results(i).parallel_time6 = parallel_time;
+        results(i).parallel_image6 = mandel;
+    end
+
+    speedup = serial_times ./ parallel_times;
+
+    plot(serial_times)
+    hold on
+    plot(parallel_times)
+    legend('Serial','Parallel')
+    xlabel('Resolution Index')
+    ylabel('Time (s)')
+
+    plot(worker_counts, speedup)
+    xlabel('Workers')
+    ylabel('Speedup')
+end
+
+run_analysis()
