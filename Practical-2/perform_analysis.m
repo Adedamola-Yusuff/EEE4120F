@@ -175,6 +175,7 @@ function run_analysis()
     max_iterations  = 1000;
     
     names = ["SVGA","HD","FullHD","2K","QHD","4K UHD","5K","8K UHD"];
+    labels = ["800x600","1280x720","1920x1080","2048x1080","2560x1440","3840x2160","5120x2880","7680x4320"];
     results = struct();
     % The data structure of results is:
     % results(i).name
@@ -271,31 +272,29 @@ function run_analysis()
     plot(serial_times,'LineWidth',4)
     hold on
     
-    fprintf("iterate until %d",length(workers))
     for w = 1:length(workers)
-        fprintf("\nw = %d\n", w)
         parallel_times = zeros(length(results),1);
         disp(parallel_times)
         for i = 1:length(results)
             parallel_times(i) = results(i).parallel(w).time;
             fprintf("\nparallel_time for %d workers with image size %s is %d \n", results(i).parallel(w).workers, names(i), parallel_times(i))
         end
-        fprintf("\nw = %d\n", w)
         plot(parallel_times,'LineWidth',4)
-        fprintf("\nw = %d\n", w)
         hold on
-        fprintf("\nw = %d\n", w)
     end
     
     legend(["Serial","2 workers","3 workers","4 workers","5 workers","6 workers"],"FontSize",10)
-    xlabel("Resolution Index","FontSize",25)
+    xticks(1:length(labels))
+    xticklabels(labels)
+    xtickangle(30)
+    xlabel("Resolution","FontSize",25)
     ylabel("Execution Time (s)","FontSize",25)
     title("Serial vs Parallel Mandelbrot Execution Time","FontSize",30)
     grid on
     
     saveas(gcf,"runtime_comparison.png")
 
-    %% ===== Speedup vs Workers Plot =====
+    %% ===== Individual speedup vs Workers Plot =====
     fprintf("\nMaking speedup vs workers plot \n")
     target = length(results); % use largest resolution (8K)
     
@@ -307,10 +306,10 @@ function run_analysis()
     
     figure
     plot(workers, speedups,'-o','MarkerSize',4,'LineWidth',4)
-    
-    xlabel("Number of Workers","FontSize",25)
-    ylabel("Speedup","FontSize",25)
-    title(sprintf("Speedup vs Workers (%s Resolution)", results(target).name),"FontSize",30)
+    xticks(workers)
+    xlabel("Number of Workers [n]","FontSize",25)
+    ylabel("Speedup from 1 Worker to [n]","FontSize",25)
+    title(sprintf("Speedup vs Number of Workers (%s Resolution)", results(target).name),"FontSize",30)
     
     grid on
     
@@ -334,9 +333,12 @@ function run_analysis()
     end
     
     legend(["2 workers","3 workers","4 workers","5 workers","6 workers"],"FontSize",10)
-    xlabel("Resolution Index","FontSize",25)
+    xticks(1:length(labels))
+    xticklabels(labels)
+    xtickangle(30)
+    xlabel("Resolution","FontSize",25)
     ylabel("Speedup","FontSize",25)
-    title("Speedup vs Resolution","FontSize",30)
+    title("Speedup (w.r.t. sequential) vs Resolution","FontSize",30)
     grid on
     
     saveas(gcf,"speedup_vs_resolution.png")
