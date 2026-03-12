@@ -235,6 +235,8 @@ function run_analysis()
         end
     end
 
+    disp(results(1).parallel)
+
     %% ===== Speedup Calculation =====
     for i = 1:length(results)
         for w = 1:length(results(i).parallel)
@@ -251,8 +253,8 @@ function run_analysis()
         fprintf("\nFinished saving mandelbrot image from serial computation for %s \n", names(i))
         % Save parallel images
         for w = 1:length(results(i).parallel)
-            workers = results(i).parallel(w).workers;
-            filename = sprintf("mandelbrot_%s_parallel_%dw.png", results(i).name, workers);
+            num_workers = results(i).parallel(w).workers;
+            filename = sprintf("mandelbrot_%s_parallel_%dw.png", results(i).name, num_workers);
             mandelbrot_plot(results(i).parallel(w).image, filename);
             fprintf("\nFinished saving mandelbrot image from parallel computation with %d workers for image size %s \n", results(i).parallel(w).workers, names(i))
         end
@@ -269,16 +271,20 @@ function run_analysis()
     plot(serial_times,'LineWidth',4)
     hold on
     
+    fprintf("iterate until %d",length(workers))
     for w = 1:length(workers)
-    
+        fprintf("\nw = %d\n", w)
         parallel_times = zeros(length(results),1);
-    
+        disp(parallel_times)
         for i = 1:length(results)
             parallel_times(i) = results(i).parallel(w).time;
+            fprintf("\nparallel_time for %d workers with image size %s is %d \n", results(i).parallel(w).workers, names(i), parallel_times(i))
         end
-    
+        fprintf("\nw = %d\n", w)
         plot(parallel_times,'LineWidth',4)
-    
+        fprintf("\nw = %d\n", w)
+        hold on
+        fprintf("\nw = %d\n", w)
     end
     
     legend(["Serial","2 workers","3 workers","4 workers","5 workers","6 workers"],"FontSize",10)
@@ -300,7 +306,7 @@ function run_analysis()
     end
     
     figure
-    plot(workers, speedups,'-o','LineWidth',4)
+    plot(workers, speedups,'-o','MarkerSize',4,'LineWidth',4)
     
     xlabel("Number of Workers","FontSize",25)
     ylabel("Speedup","FontSize",25)
@@ -324,7 +330,7 @@ function run_analysis()
         end
     
         plot(s,'LineWidth',4)
-    
+        hold on    
     end
     
     legend(["2 workers","3 workers","4 workers","5 workers","6 workers"],"FontSize",10)
