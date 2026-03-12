@@ -23,8 +23,8 @@ starting with $z_0 = 0$. A complex number $c$ is in the Mandelbrot set if the se
 
 ```
 Practical-2/
-├── README.md                    # This file
-├── run_analysis.m              # Main MATLAB script with TODO sections
+├── README.md                       # This file
+├── perform_analysis.m              # Main MATLAB script with TODO sections
 └── (output files generated during execution)
 ```
 ---
