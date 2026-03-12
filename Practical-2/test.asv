@@ -1,0 +1,87 @@
+function mandelbrot_plot(mandelbrot_matrix, filename)
+    % Create a new figure
+    figure;
+    
+    % Plot the matrix as an image
+    imagesc(mandelbrot_matrix)
+
+    % Ensures that the pixels aren't stretched
+    axis equal;
+
+    % Fills the axes box tightly around the data by setting the axis lmits
+    % equal to the range of the data
+    axis tight;
+    
+    % We don't really want to see the axes. Also, it would just look nice
+    % in the report
+    axis off;
+
+    % Controls the coloring of iteration values. Could also use
+     colormap(TurbEffMdl)
+    % colormap("pink")
+    colorbar;
+
+    % Add title
+    title('Mandelbrot Set');
+
+    % Save the figure to file
+    saveas(gcf, filename);
+end
+
+function [mandel] = mandelbrot_parallel(width, height, max_iterations)
+
+    % Coordinate limits
+    xmin = -2.0;
+    xmax = 0.5;
+    ymin = -1.2;
+    ymax = 1.2;
+
+    % Preallocate matrix
+    mandel = zeros(height, width);
+
+    % Parallel outer loop
+    parfor ix = 1:width
+        for iy = 1:height
+
+            % Map pixel to complex plane
+            x0 = xmin + (ix-1)*(xmax-xmin)/(width-1);
+            y0 = ymin + (iy-1)*(ymax-ymin)/(height-1);
+
+            % Initial conditions
+            x = 0;
+            y = 0;
+            iteration = 0;
+
+            % Mandelbrot iteration
+            while (iteration < max_iterations) && (x^2 + y^2 <= 4)
+                x_next = x^2 - y^2 + x0;
+                y_next = 2*x*y + y0;
+
+                x = x_next;
+                y = y_next;
+
+                iteration = iteration + 1;
+            end
+
+            mandel(iy, ix) = iteration;
+        end
+    end
+end
+
+image_sizes = [
+    [800,600],   %SVGA
+    [1280,720],  %HD
+    [1920,1080], %Full HD
+    [2048,1080], %2K Cinema
+    [2560,1440], %2K QHD
+    [3840,2160], %4K UHD
+    [5120,2880], %5K
+    [7680,4320]  %8K UHD
+]
+
+delete(gcp('nocreate'))
+parpool(2)
+
+example = mandelbrot_serial(800, 600, 1000);
+mandelbrot_plot(example, 'example.png')
+
